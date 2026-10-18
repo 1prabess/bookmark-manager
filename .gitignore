@@ -1,0 +1,88 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+man/
+parts/
+sdist/
+var/
+share/
+wheels/
+*.egg-info/
+*.egg
+*.dist-info/
+*.egg-link
+.installed.cfg
+
+# Virtual environments (uv creates .venv/ by default)
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# uv: lockfile is COMMITTED (reproducibility); cache is not
+.uv-cache/
+
+# Secrets — NEVER commit
+.env
+.env.*
+!.env.example
+
+# Tests / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.cache/
+.tox/
+.nox/
+coverage.xml
+
+# Type checkers / linters
+.mypy_cache/
+.ruff_cache/
+.pyright/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Logs
+*.log
+logs/
+
+# Local DB artifacts (in case anyone exports for sharing)
+*.sql
+*.sql.gz
+*.dump
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.TemporaryItems
+.fseventsd

@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status, HTTPException
 
+from app.api.deps import CurrentUser
 from app.db.session import get_db
 from app.schemas.auth import LogoutRequest, RefreshRequest, TokenPair
 from app.schemas.user import UserCreate, UserLogin, UserRead
@@ -49,3 +50,8 @@ async def refresh(payload: RefreshRequest, svc: AuthSvc) -> TokenPair:
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(payload: LogoutRequest, svc: AuthSvc) -> None:
     await svc.logout(payload.refresh_token)
+
+
+@router.get("/me", response_model=UserRead)
+async def me(user: CurrentUser) -> UserRead:
+    return UserRead.model_validate(user)

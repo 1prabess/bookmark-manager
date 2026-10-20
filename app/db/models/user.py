@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.db.models.refresh_token import RefreshToken
+    from app.db.models.bookmark import Bookmark
 
 
 class User(Base):
@@ -52,4 +53,9 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="selectin"
+    )
+    bookmarks: Mapped[list["Bookmark"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
     )

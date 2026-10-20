@@ -4,7 +4,6 @@ from uuid import UUID, uuid4
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, String, Text, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from app.db.models.user import User
 
 
 from app.db.base import Base
@@ -12,6 +11,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.db.models.tag import Tag
+    from app.db.models.user import User
 
 
 class Bookmark(Base):
@@ -29,7 +29,7 @@ class Bookmark(Base):
         index=True
     )
     user: Mapped["User"] = relationship(
-        back_populates="user"
+        back_populates="bookmarks"
     )
     url: Mapped[str] = mapped_column(
         String(2048),

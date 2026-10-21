@@ -2,20 +2,23 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from redis.asyncio import Redis
 
 from app.api.deps import CurrentUser
 from app.db.session import get_db
 from app.schemas.bookmark import BookmarkCreate, BookmarkRead, BookmarkUpdate
 from app.services.bookmark import BookmarkNotFound, BookmarkService
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.redis import get_redis
 
 router = APIRouter(prefix="/bookmarks", tags=["bookmarks"])
 
 
 def get_bookmark_service(
-        session: Annotated[AsyncSession, Depends(get_db)]
+        session: Annotated[AsyncSession, Depends(get_db)],
+        redis: Annotated[Redis, Depends(get_redis)]
 ) -> BookmarkService:
-    return BookmarkService(session=session)
+    return BookmarkService(session=session, redis=redis)
 
 
 BookmarkSvc = Annotated[BookmarkService, Depends(get_bookmark_service)]

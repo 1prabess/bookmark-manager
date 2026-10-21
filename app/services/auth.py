@@ -1,14 +1,16 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.security import create_access_token, create_refresh_token_value, hash_password, hash_refresh_token, verify_password
+from app.db.models.password_reset_token import PasswordResetToken
 from app.db.models.refresh_token import RefreshToken
 from app.db.models.user import User
 from app.schemas.auth import TokenPair
 from app.schemas.user import UserCreate
+from app.workers.tasks.email import hash_reset_token, queue_send_welcome, generate_token,  queue_send_password_reset
 
 
 class AuthError(Exception):
@@ -36,6 +38,8 @@ class AuthService:
         self.session.add(user)
         await self.session.commit()
         await self.session.refresh(user)
+
+        queue_send_welcome(to_email=user.email)
         return user
 
     async def login(self, *, email: str, password: str) -> TokenPair:
@@ -90,6 +94,40 @@ class AuthService:
             return
 
         refresh_token.revoked_at = datetime.now(timezone.utc)
+        await self.session.commit()
+
+    async def forgot_password(self, email: str) -> None:
+        user = await self.session.scalar(select(User).where(User.email == email))
+
+        if user is None:
+            return
+
+        raw = generate_token()
+
+        reset_token = PasswordResetToken(
+            user_id=user.id,
+            token_hash=hash_reset_token(raw),
+            expires_at=datetime.now(timezone.utc) + timedelta(minutes=30),
+        )
+
+        self.session.add(reset_token)
+        await self.session.commit()
+        queue_send_password_reset(to_email=email, reset_token=raw)
+
+    async def reset_password(self, raw_token: str, new_password: str):
+        token_hash = hash_reset_token(token=raw_token)
+
+        row = await self.session.scalar(select(PasswordResetToken).where(PasswordResetToken.token_hash == token_hash))
+
+        if row is None or row.used_at is not None or row.expires_at < datetime.now(timezone.utc):
+            raise AuthError("Invalid reset token")
+
+        user = await self.session.get(User, row.user_id)
+        if user is None or user.is_active is False:
+            raise AuthError("Invalid user")
+
+        user.hashed_password = hash_password(new_password)
+        row.used_at = datetime.now(timezone.utc)
         await self.session.commit()
 
     async def _issue_token_pair(self, user: User) -> tuple[TokenPair, RefreshToken]:

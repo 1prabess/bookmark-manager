@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status, HTTPException
 
 from app.api.deps import CurrentUser
 from app.db.session import get_db
-from app.schemas.auth import LogoutRequest, RefreshRequest, TokenPair
+from app.schemas.auth import ForgotPasswordRequest, LogoutRequest, RefreshRequest, TokenPair, RestPasswordRequest
 from app.schemas.user import UserCreate, UserLogin, UserRead
 from app.services.auth import AuthError, AuthService
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -52,6 +52,20 @@ async def logout(payload: LogoutRequest, svc: AuthSvc) -> None:
     await svc.logout(payload.refresh_token)
 
 
+@router.post("/reset-password", status_code=status.HTTP_204_NO_CONTENT)
+async def reset_password(payload: RestPasswordRequest, svc: AuthSvc) -> None:
+    try:
+        await svc.reset_password(raw_token=payload.reset_token, new_password=payload.new_password)
+    except AuthError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
 @router.get("/me", response_model=UserRead)
 async def me(user: CurrentUser) -> UserRead:
     return UserRead.model_validate(user)
+
+
+@router.post("/forgot-password", status_code=status.HTTP_204_NO_CONTENT)
+async def forgot_password(payload: ForgotPasswordRequest, svc: AuthSvc):
+    return await svc.forgot_password(payload.email)

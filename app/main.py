@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from app.db.session import engine
 from sqlalchemy import text
 from app.api.v1.router import api_router
+from app.workers.celery_app import celery_app
 
 
 @asynccontextmanager
